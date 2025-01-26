@@ -1,5 +1,8 @@
 Language: **English** | [Українська](README_UK.md)
 
+> [!WARNING]
+> If you have any difficulties with this library, please [**create an Issue**](https://github.com/denis-akazuki/samp-mobile-cef/issues/new). I don't help anywhere other than the official repository on GitHub.
+
 # SA:MP Mobile CEF
 **Ready-made solution** for **integrating a browser** (WebView, or more commonly known as CEF) into the [**SA:MP mobile client**](https://github.com/4x11/build69). For example, it enables the integration of beautiful interfaces into the client-side using browser technologies (HTML/CSS/JS).
 
