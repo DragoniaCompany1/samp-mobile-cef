@@ -29,7 +29,7 @@ A simple notification system with the ability to accept or reject an action - th
 ![Example #2](example/images/demo-2.png)
 
 ---
-[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner-direct-single.svg)](https://stand-with-ukraine.pp.ua)
+[![Stand With Ukraine](docs/images/banner.svg)](https://stand-with-ukraine.pp.ua)
 
 ---
 **Copyright © 2024 [Denis Akazuki](https://github.com/denis-akazuki).**
