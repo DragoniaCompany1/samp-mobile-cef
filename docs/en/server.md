@@ -1,6 +1,6 @@
 Language: **English** | [Українська](../uk/server.md)
 
-# SA:MP Mobile CEF
+# SA:MP Mobile CEF (Server API Documentation)
 
 ## Important Information
 - If the length of the information you send to/from the callback exceeds the limit specified in `SAMPMobileCef.inc` (default is 2048), it is possible to extend it manually:
@@ -12,115 +12,118 @@ Language: **English** | [Українська](../uk/server.md)
 #define CEF_MAX_EVENT_CALLBACK_LENGTH 72 // extend the maximum length of the callback function name (default is 64)
 #define CEF_MAX_EVENT_DATA_LENGTH 4096 // extend the maximum length of callback data (default is 2048)
 ```
-- It is highly discouraged to use all the memory allocated for callback data (2048 characters). Always leave some free space when sending data to the callback (on both sides). If this is not possible, extend the memory using the method above.
-
-## Installation and Setup of the Server-side
-- Export the `server/SAMPMobileCef.inc` file to the `pawno/include` directory (Windows)
-- Install the following dependencies: [`Pawn.RakNet`](https://github.com/katursis/Pawn.RakNet), [`pawn-json`](https://github.com/Southclaws/pawn-json), and [`SA-MP GVar Plugin`](https://github.com/samp-incognito/samp-gvar-plugin)
-- Include the previously installed plugins and the `SAMPMobileCef.inc` header file in the game mode:
-    ```pawn
-    #include <Pawn.RakNet>
-    #include <json>
-    #include <gvar>
-    #include <SAMPMobileCef>
-    ```
-- For convenience, declare the `CEF_PACKET_ID` macro with the network packet ID:
-    ```pawn
-    #define CEF_PACKET_ID 252 // or any other ID that you specified during the client-side setup
-    ```
-- In the `OnGameModeInit` public, call the `OnGameModeInit` function:
-    ```pawn
-    public OnGameModeInit()
-    {
-        CefSetPacketId(CEF_PACKET_ID); // previously declared macro with the network packet ID
-        
-        return 1;
-    }
-    ```
-- A detailed way of working with functionality, packaging, and reading data can be found in the [**simple example**](../../example/server/example.pwn). If you encounter difficulties implementing your idea - [**write here**](https://github.com/denis-akazuki/samp-mobile-cef/issues).
-
-## List of Functions
-### `CefSetPacketId(packet_id)`
-Sets the network packet ID for interacting with CEF.
-
-- **Parameters**:
-  - `packet_id` (int): The packet ID to be used for CEF.
-
-### `CefInitBrowser(playerid, url[])`
-Initializes the browser for the specified player.
-
-> [!NOTE]
-> You should not recreate the browser every time it is used. Initialize it once when the player connects and use it for further purposes.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-  - `url` (string): The URL to be loaded in the browser.
-
-### `CefDestroyBrowser(playerid)`
-Destroys the browser for the specified player.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-
-### `CefShowBrowser(playerid)`
-Shows the browser to the specified player.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-
-### `CefHideBrowser(playerid)`
-Hides the browser for the specified player.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-
-### `CefSetBrowserUrl(playerid, url[])`
-Sets the browser URL for the specified player.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-  - `url` (string): The URL to be loaded in the browser.
-
-### `CefChangeBrowserFocus(playerid, is_focused)`
-Changes the focus (clickability) state of the browser for the specified player. By default, the browser is initialized with focus (clickability) enabled.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-  - `is_focused` (bool): `true` if the browser should be focused (clickable), `false` otherwise.
-
-### `CefSendEvent(playerid, event_name[], event_data[])`
-Sends an event to the browser for the specified player.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-  - `event_name` (string): The name of the event.
-  - `event_data` (string): The packed JSON data.
-
-### `CefRegisterEventCallback(event_name[], callback[])`
-Registers a callback function for the specified event.
-
-- **Parameters**:
-  - `event_name` (string): The name of the event.
-  - `callback` (string): The name of the callback function that will be executed when the event is received from the client.
-
-### `CefIsPlayerHasLibrary(playerid)`
-Checks if the specified player has the CEF library.
-
-> [!WARNING]
-> Do not use this function in the `OnPlayerConnect` public. The client may not have time to send the player's information at the time of connection.
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-- **Returns**: `true` if the CEF library is present, `false` otherwise.
-
-## List of Callbacks
-### `OnCefBrowserInit(playerid, is_init, error_code)`
-Called after loading the URL specified during initialization (or manual change).
-
-- **Parameters**:
-  - `playerid` (int): The player ID.
-  - `is_init` (bool): `true` if the URL was successfully loaded, `false` otherwise.
-  - `error_code` (int): `-1` for successful URL loading, `0` in case of an unknown error, or `HTTP status code`.
 
 ---
+
+## Installation and Setup of the Server-side
+- Copy `server/SAMPMobileCef.inc` to your `pawno/include` directory.
+- Install dependencies: [`Pawn.RakNet`](https://github.com/katursis/Pawn.RakNet), [`pawn-json`](https://github.com/Southclaws/pawn-json), and [`SA-MP GVar Plugin`](https://github.com/samp-incognito/samp-gvar-plugin).
+- Include dependencies and header:
+  ```pawn
+  #include <Pawn.RakNet>
+  #include <json>
+  #include <gvar>
+  #include <SAMPMobileCef>
+  ```
+- Declare packet ID macro:
+  ```pawn
+  #define CEF_PACKET_ID 252
+  ```
+- Set packet ID in `OnGameModeInit`:
+  ```pawn
+  public OnGameModeInit()
+  {
+      CefSetPacketId(CEF_PACKET_ID);
+      return 1;
+  }
+  ```
+
+---
+
+## List of Functions
+
+### Core Functions
+
+#### `CefSetPacketId(packet_id)`
+Sets the network packet ID for interacting with CEF.
+
+#### `CefInitBrowser(playerid, const url[])`
+Initializes the browser for the specified player with the given URL.
+
+#### `CefDestroyBrowser(playerid)`
+Destroys the browser for the specified player.
+
+#### `CefShowBrowser(playerid)`
+Shows the browser to the specified player.
+
+#### `CefHideBrowser(playerid)`
+Hides the browser for the specified player.
+
+#### `CefToggleBrowser(playerid, bool:show)`
+Toggles browser visibility for the player (`true` to show, `false` to hide).
+
+#### `bool:CefIsBrowserShown(playerid)`
+Returns `true` if the specified player's browser is currently visible, `false` otherwise.
+
+#### `CefSetBrowserUrl(playerid, const url[])`
+Changes the active URL loaded in the specified player's browser.
+
+#### `CefGetBrowserUrl(playerid, dest[], maxlen)`
+Retrieves the active URL currently loaded in the player's browser.
+
+#### `CefReloadBrowser(playerid)`
+Reloads the currently loaded URL in the player's browser.
+
+#### `CefResetBrowser(playerid)`
+Resets the player's browser state (hides browser, clears focus, and resets stored URL).
+
+#### `CefChangeBrowserFocus(playerid, bool:is_focused)`
+Changes touch/keyboard focus for the specified player.
+
+#### `CefSetBrowserFocusAll(bool:is_focused)`
+Changes touch/keyboard focus for all connected players with CEF support.
+
+---
+
+### Event & Scripting Functions
+
+#### `CefSendEvent(playerid, const event_name[], const event_data[])`
+Sends a JSON event payload to the specified player's browser.
+
+#### `CefSendEventToAll(const event_name[], const event_data[])`
+Broadcasts a JSON event payload to all online players with CEF support.
+
+#### `CefExecuteJavaScript(playerid, const code[])`
+Executes a dynamic JavaScript code string inside the specified player's browser.
+
+#### `CefExecuteJavaScriptToAll(const code[])`
+Broadcasts dynamic JavaScript code execution to all online players with CEF support.
+
+#### `CefRegisterEventCallback(const event_name[], const callback[])`
+Registers a Pawn callback function to handle events sent from the client JavaScript.
+
+#### `bool:CefUnregisterEventCallback(const event_name[])`
+Unregisters a previously registered event callback.
+
+#### `bool:CefHasEventCallback(const event_name[])`
+Returns `true` if a callback is registered for the specified event name.
+
+#### `bool:CefIsPlayerHasLibrary(playerid)`
+Returns `true` if the player's client supports CEF.
+
+#### `CefGetInitializedPlayerCount()`
+Returns the total number of connected players currently online who have CEF initialized.
+
+---
+
+## List of Callbacks
+
+### `OnCefBrowserInit(playerid, is_init, error_code)`
+Called after loading the URL specified during browser initialization or manual change.
+- `playerid`: Player ID.
+- `is_init`: `true` if URL was loaded successfully, `false` otherwise.
+- `error_code`: `-1` on success, `0` on unknown error, or HTTP status code.
+
+---
+
 **Copyright © 2024 [Denis Akazuki](https://github.com/denis-akazuki).**

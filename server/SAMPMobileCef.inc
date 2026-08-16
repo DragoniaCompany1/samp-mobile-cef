@@ -1,5 +1,5 @@
 /*
-	EN: Server include of CEF library for SA:MP Mobile (Upgraded Edition).
+	EN: Server include of CEF library for SA:MP Mobile (Pro Edition).
 	UK: Серверний заголовний файл бібліотеки CEF для SA:MP Mobile.
 
 	Copyright © 2024 Denis Akazuki <https://github.com/denis-akazuki>
@@ -24,7 +24,7 @@
 	#endif
 
 	#define CEF_PREFIX "[CEF] "
-	#define CEF_INC_VERSION "1.1.0-Upgraded"
+	#define CEF_INC_VERSION "1.2.0-Upgraded"
 
 	#if !defined CEF_MAX_EVENT_NAME_LENGTH
 		#define CEF_MAX_EVENT_NAME_LENGTH 48
@@ -201,6 +201,16 @@
 		}
 	}
 
+	stock CefResetBrowser(playerid)
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return;
+
+		CefHideBrowser(playerid);
+		CefChangeBrowserFocus(playerid, false);
+		cef_browser_url[playerid][0] = EOS;
+	}
+
 	stock CefSetBrowserUrl(playerid, const url[])
 	{
 		if (!IsPacketIdSet())
@@ -243,6 +253,30 @@
 		BS_Delete(bs);
 	}
 
+	stock CefSetBrowserFocusAll(bool:is_focused)
+	{
+		if (!IsPacketIdSet())
+			return;
+
+		#if defined foreach
+			foreach (new i : Player)
+			{
+				if (CefIsPlayerHasLibrary(i))
+				{
+					CefChangeBrowserFocus(i, is_focused);
+				}
+			}
+		#else
+			for (new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+			{
+				if (IsPlayerConnected(i) && CefIsPlayerHasLibrary(i))
+				{
+					CefChangeBrowserFocus(i, is_focused);
+				}
+			}
+		#endif
+	}
+
 	stock CefSendEvent(playerid, const event_name[], const event_data[])
 	{
 		if (!IsPacketIdSet())
@@ -262,6 +296,30 @@
 		PR_SendPacket(bs, playerid, PR_HIGH_PRIORITY, PR_RELIABLE);
 		
 		BS_Delete(bs);
+	}
+
+	stock CefExecuteJavaScript(playerid, const code[])
+	{
+		if (!IsPacketIdSet() || !CefIsPlayerHasLibrary(playerid))
+			return;
+
+		new Node:eval_node = JSON_Array(JSON_String(code));
+		new eval_data[CEF_MAX_EVENT_DATA_LENGTH];
+		JSON_Stringify(eval_node, eval_data);
+
+		CefSendEvent(playerid, "_cef_eval", eval_data);
+	}
+
+	stock CefExecuteJavaScriptToAll(const code[])
+	{
+		if (!IsPacketIdSet())
+			return;
+
+		new Node:eval_node = JSON_Array(JSON_String(code));
+		new eval_data[CEF_MAX_EVENT_DATA_LENGTH];
+		JSON_Stringify(eval_node, eval_data);
+
+		CefSendEventToAll("_cef_eval", eval_data);
 	}
 
 	stock CefSendEventToAll(const event_name[], const event_data[])
@@ -286,6 +344,23 @@
 				}
 			}
 		#endif
+	}
+
+	stock CefGetInitializedPlayerCount()
+	{
+		new count = 0;
+		#if defined foreach
+			foreach (new i : Player)
+			{
+				if (CefIsPlayerHasLibrary(i)) count++;
+			}
+		#else
+			for (new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+			{
+				if (IsPlayerConnected(i) && CefIsPlayerHasLibrary(i)) count++;
+			}
+		#endif
+		return count;
 	}
 
 	stock CefRegisterEventCallback(const event_name[], const callback[])
