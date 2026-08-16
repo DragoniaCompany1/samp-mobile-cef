@@ -24,7 +24,7 @@
 	#endif
 
 	#define CEF_PREFIX "[CEF] "
-	#define CEF_INC_VERSION "1.2.0-Upgraded"
+	#define CEF_INC_VERSION "1.4.0-Upgraded"
 
 	#if !defined CEF_MAX_EVENT_NAME_LENGTH
 		#define CEF_MAX_EVENT_NAME_LENGTH 48
@@ -40,6 +40,10 @@
 	new cef_initialized_players[MAX_PLAYERS];
 	new bool:cef_browser_shown[MAX_PLAYERS];
 	new cef_browser_url[MAX_PLAYERS][128];
+	new Float:cef_browser_zoom[MAX_PLAYERS];
+	new cef_rate_limit_max = 20; // Default max events per second per player
+	new cef_event_count[MAX_PLAYERS];
+	new cef_event_timestamp[MAX_PLAYERS];
 
 	enum
 	{
@@ -75,6 +79,12 @@
 		printf("%s New cef packet id: %d", CEF_PREFIX, cef_packet_id);
 	}
 
+	stock CefSetEventRateLimit(max_events_per_sec)
+	{
+		cef_rate_limit_max = max_events_per_sec;
+		printf("%s Event rate limit set to %d events/sec", CEF_PREFIX, cef_rate_limit_max);
+	}
+
 	stock CefInitBrowser(playerid, const url[])
 	{
 		if (!IsPacketIdSet())
@@ -83,6 +93,7 @@
 		if (playerid >= 0 && playerid < MAX_PLAYERS)
 		{
 			format(cef_browser_url[playerid], sizeof(cef_browser_url[]), "%s", url);
+			cef_browser_zoom[playerid] = 1.0;
 		}
 		
 		new BitStream:bs = BS_New();
@@ -108,6 +119,7 @@
 		{
 			cef_browser_shown[playerid] = false;
 			cef_browser_url[playerid][0] = EOS;
+			cef_browser_zoom[playerid] = 1.0;
 		}
 
 		new BitStream:bs = BS_New();
@@ -209,6 +221,26 @@
 		CefHideBrowser(playerid);
 		CefChangeBrowserFocus(playerid, false);
 		cef_browser_url[playerid][0] = EOS;
+		cef_browser_zoom[playerid] = 1.0;
+	}
+
+	stock CefSetBrowserZoom(playerid, Float:scale)
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return;
+
+		cef_browser_zoom[playerid] = scale;
+		new js_code[64];
+		format(js_code, sizeof(js_code), "document.body.style.zoom = '%.2f';", scale);
+		CefExecuteJavaScript(playerid, js_code);
+	}
+
+	stock Float:CefGetBrowserZoom(playerid)
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return 1.0;
+
+		return cef_browser_zoom[playerid];
 	}
 
 	stock CefSetBrowserUrl(playerid, const url[])
@@ -430,6 +462,21 @@
 				}
 				case RPC_ClientEvent:
 				{
+					// Anti-Spam Rate Limiter Check
+					new current_time = gettime();
+					if (current_time != cef_event_timestamp[playerid])
+					{
+						cef_event_timestamp[playerid] = current_time;
+						cef_event_count[playerid] = 0;
+					}
+
+					cef_event_count[playerid]++;
+					if (cef_event_count[playerid] > cef_rate_limit_max)
+					{
+						printf("%s WARNING: Player %d exceeded event rate limit (%d/sec). Event ignored.", CEF_PREFIX, playerid, cef_rate_limit_max);
+						return 0; // Block event execution
+					}
+
 					new event_name_length;
 					new event_name[CEF_MAX_EVENT_NAME_LENGTH];
 					event_name[0] = EOS;
@@ -479,6 +526,9 @@
 			cef_initialized_players[playerid] = 0;
 			cef_browser_shown[playerid] = false;
 			cef_browser_url[playerid][0] = EOS;
+			cef_browser_zoom[playerid] = 1.0;
+			cef_event_count[playerid] = 0;
+			cef_event_timestamp[playerid] = 0;
 		}
 		
 		#if defined Cef_OnPlayerConnect
@@ -504,6 +554,9 @@
 			cef_initialized_players[playerid] = -1;
 			cef_browser_shown[playerid] = false;
 			cef_browser_url[playerid][0] = EOS;
+			cef_browser_zoom[playerid] = 1.0;
+			cef_event_count[playerid] = 0;
+			cef_event_timestamp[playerid] = 0;
 		}
 		
 		#if defined Cef_OnPlayerDisconnect
