@@ -1,5 +1,5 @@
 /*
-	EN: Server include of CEF library for SA:MP Mobile.
+	EN: Server include of CEF library for SA:MP Mobile (Upgraded Edition).
 	UK: Серверний заголовний файл бібліотеки CEF для SA:MP Mobile.
 
 	Copyright © 2024 Denis Akazuki <https://github.com/denis-akazuki>
@@ -24,7 +24,7 @@
 	#endif
 
 	#define CEF_PREFIX "[CEF] "
-	#define CEF_INC_VERSION "1.0.0"
+	#define CEF_INC_VERSION "1.1.0-Upgraded"
 
 	#if !defined CEF_MAX_EVENT_NAME_LENGTH
 		#define CEF_MAX_EVENT_NAME_LENGTH 48
@@ -38,6 +38,8 @@
 
 	new cef_packet_id = -1;
 	new cef_initialized_players[MAX_PLAYERS];
+	new bool:cef_browser_shown[MAX_PLAYERS];
+	new cef_browser_url[MAX_PLAYERS][128];
 
 	enum
 	{
@@ -78,6 +80,11 @@
 		if (!IsPacketIdSet())
 			return;
 		
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			format(cef_browser_url[playerid], sizeof(cef_browser_url[]), "%s", url);
+		}
+		
 		new BitStream:bs = BS_New();
 		
 		BS_WriteValue(
@@ -97,6 +104,12 @@
 		if (!IsPacketIdSet())
 			return;
 		
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			cef_browser_shown[playerid] = false;
+			cef_browser_url[playerid][0] = EOS;
+		}
+
 		new BitStream:bs = BS_New();
 		
 		BS_WriteValue(
@@ -114,6 +127,11 @@
 		if (!IsPacketIdSet())
 			return;
 		
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			cef_browser_shown[playerid] = true;
+		}
+
 		new BitStream:bs = BS_New();
 		
 		BS_WriteValue(
@@ -131,6 +149,11 @@
 		if (!IsPacketIdSet())
 			return;
 		
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			cef_browser_shown[playerid] = false;
+		}
+
 		new BitStream:bs = BS_New();
 		
 		BS_WriteValue(
@@ -143,11 +166,51 @@
 		BS_Delete(bs);
 	}
 
+	stock CefToggleBrowser(playerid, bool:show)
+	{
+		if (show)
+			CefShowBrowser(playerid);
+		else
+			CefHideBrowser(playerid);
+	}
+
+	stock bool:CefIsBrowserShown(playerid)
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return false;
+
+		return cef_browser_shown[playerid];
+	}
+
+	stock CefGetBrowserUrl(playerid, dest[], maxlen = sizeof(dest))
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return 0;
+
+		return format(dest, maxlen, "%s", cef_browser_url[playerid]);
+	}
+
+	stock CefReloadBrowser(playerid)
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return;
+
+		if (cef_browser_url[playerid][0] != EOS)
+		{
+			CefSetBrowserUrl(playerid, cef_browser_url[playerid]);
+		}
+	}
+
 	stock CefSetBrowserUrl(playerid, const url[])
 	{
 		if (!IsPacketIdSet())
 			return;
 		
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			format(cef_browser_url[playerid], sizeof(cef_browser_url[]), "%s", url);
+		}
+
 		new BitStream:bs = BS_New();
 		
 		BS_WriteValue(
@@ -201,6 +264,30 @@
 		BS_Delete(bs);
 	}
 
+	stock CefSendEventToAll(const event_name[], const event_data[])
+	{
+		if (!IsPacketIdSet())
+			return;
+
+		#if defined foreach
+			foreach (new i : Player)
+			{
+				if (CefIsPlayerHasLibrary(i))
+				{
+					CefSendEvent(i, event_name, event_data);
+				}
+			}
+		#else
+			for (new i = 0, j = GetPlayerPoolSize(); i <= j; i++)
+			{
+				if (IsPlayerConnected(i) && CefIsPlayerHasLibrary(i))
+				{
+					CefSendEvent(i, event_name, event_data);
+				}
+			}
+		#endif
+	}
+
 	stock CefRegisterEventCallback(const event_name[], const callback[])
 	{
 		if (!IsPacketIdSet())
@@ -218,13 +305,28 @@
 		
 		SetGVarString(event_name, callback);
 	}
-	
-	stock CefIsPlayerHasLibrary(playerid)
+
+	stock bool:CefUnregisterEventCallback(const event_name[])
 	{
-		if (!IsPacketIdSet())
+		if (GetGVarType(event_name) != GLOBAL_VARTYPE_NONE)
+		{
+			DeleteGVar(event_name);
+			return true;
+		}
+		return false;
+	}
+
+	stock bool:CefHasEventCallback(const event_name[])
+	{
+		return (GetGVarType(event_name) != GLOBAL_VARTYPE_NONE);
+	}
+	
+	stock bool:CefIsPlayerHasLibrary(playerid)
+	{
+		if (!IsPacketIdSet() || playerid < 0 || playerid >= MAX_PLAYERS)
 			return false;
 		
-		return cef_initialized_players[playerid];
+		return bool:cef_initialized_players[playerid];
 	}
 
 	public OnIncomingPacket(playerid, packetid, BitStream:bs)
@@ -297,7 +399,12 @@
 	
 	public OnPlayerConnect(playerid)
 	{
-		cef_initialized_players[playerid] = 0;
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			cef_initialized_players[playerid] = 0;
+			cef_browser_shown[playerid] = false;
+			cef_browser_url[playerid][0] = EOS;
+		}
 		
 		#if defined Cef_OnPlayerConnect
 			Cef_OnPlayerConnect(playerid);
@@ -317,7 +424,12 @@
 	
 	public OnPlayerDisconnect(playerid, reason)
 	{
-		cef_initialized_players[playerid] = -1;
+		if (playerid >= 0 && playerid < MAX_PLAYERS)
+		{
+			cef_initialized_players[playerid] = -1;
+			cef_browser_shown[playerid] = false;
+			cef_browser_url[playerid][0] = EOS;
+		}
 		
 		#if defined Cef_OnPlayerDisconnect
 			Cef_OnPlayerDisconnect(playerid, reason);

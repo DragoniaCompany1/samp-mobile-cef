@@ -14,7 +14,7 @@ enum
 
 main()
 {
-    print("CEF Example Server");
+    print("CEF Example Server (Upgraded Edition)");
     print("GitHub: https://github.com/denis-akazuki/samp-mobile-cef");
 }
 
@@ -58,7 +58,7 @@ public OnCefBrowserInit(playerid, is_init, error_code)
         return 1;
     }
 
-    SendClientMessage(playerid, -1, "[CEF] All is okay!");
+    SendClientMessage(playerid, -1, "[CEF] All is okay! Browser initialized successfully.");
     CefShowBrowser(playerid);
 
     return 1;
@@ -80,9 +80,6 @@ public OnGameModeExit()
 public OnPlayerConnect(playerid)
 {
     /* EN: android_asset - app/src/main/assets/ directory in Android application */
-    /* EN: To store interfaces in the game cache directory, you can use: file://Android/data/your.package.name/files/ (not tested). */
-    /* UK: android_asset - директорія app/src/main/assets/ в Android застосунку */
-    /* UK: Для зберігання інтерфейсів у директорії кешу гри можна використовувати: file://Android/data/your.package.name/files/ (не перевірено). */
     CefInitBrowser(playerid, "file:///android_asset/cef/index.html");
     CefChangeBrowserFocus(playerid, false);
 
@@ -131,6 +128,38 @@ public OnPlayerCommandText(playerid, cmdtext[])
             CefSendEvent(playerid, "alert_show", event_data);
             CefChangeBrowserFocus(playerid, true);
         }
+        return 1;
+    }
+
+    // NEW UPGRADED COMMAND: Toggle CEF browser visibility
+    if (!strcmp(cmdtext, "/toggle_cef", true))
+    {
+        if (CefIsPlayerHasLibrary(playerid))
+        {
+            new bool:is_shown = CefIsBrowserShown(playerid);
+            CefToggleBrowser(playerid, !is_shown);
+            
+            new msg[64];
+            format(msg, sizeof(msg), "[CEF] Browser visibility toggled: %s", (!is_shown) ? ("SHOWN") : ("HIDDEN"));
+            SendClientMessage(playerid, -1, msg);
+        }
+        return 1;
+    }
+
+    // NEW UPGRADED COMMAND: Broadcast CEF event to all online players
+    if (!strcmp(cmdtext, "/broadcast_cef", true))
+    {
+        new Node:event_data_node = JSON_Array(
+            JSON_Int(0),
+            JSON_String("Server Announcement"),
+            JSON_String("Hello to all CEF SA:MP Mobile Players!")
+        );
+
+        new event_data[CEF_MAX_EVENT_DATA_LENGTH];
+        JSON_Stringify(event_data_node, event_data);
+
+        CefSendEventToAll("alert_show", event_data);
+        SendClientMessage(playerid, -1, "[CEF] Broadcast event sent to all players!");
         return 1;
     }
 
