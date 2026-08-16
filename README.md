@@ -2,7 +2,7 @@
 
 ![SA:MP Mobile CEF Banner](docs/images/banner.svg)
 
-[![Release](https://img.shields.io/badge/version-1.4.0--Upgraded-indigo.svg)](CHANGELOG.md)
+[![Release](https://img.shields.io/badge/version-1.4.1--Clean-indigo.svg)](CHANGELOG.md)
 [![SA:MP](https://img.shields.io/badge/SA--MP-0.3.7-orange.svg)](https://sa-mp.mp)
 [![open.mp](https://img.shields.io/badge/open.mp-compatible-blue.svg)](https://open.mp)
 [![Android](https://img.shields.io/badge/Platform-Android%20Mobile-green.svg)](https://github.com/4x11/build69)
@@ -18,7 +18,7 @@
 - [📦 Includes & Modules](#-includes--modules)
 - [🚀 Quick Start & Installation](#-quick-start--installation)
 - [📖 Core Pawn API (SAMPMobileCef.inc)](#-core-pawn-api-sampmobilecefinc)
-- [🎨 High-Level UI Framework (SAMPMobileCefUI.inc)](#-high-level-ui-framework-sampmobilecefuiinc)
+- [🎨 Streamlined UI Framework (SAMPMobileCefUI.inc)](#-streamlined-ui-framework-sampmobilecefuiinc)
 - [🌐 JavaScript Web API Reference](#-javascript-web-api-reference)
 - [💡 Usage Examples](#-usage-examples)
 - [📝 Changelog](#-changelog)
@@ -29,14 +29,12 @@
 
 - **Full WebView Control**: Initialize, show, hide, reload, toggle, scale/zoom, and change URL/focus directly from Pawn.
 - **Anti-Spam Event Rate Limiter**: Server-side protection against JavaScript event flooding (`CefSetEventRateLimit`).
-- **High-Level UI Framework (`SAMPMobileCefUI.inc`)**:
+- **Streamlined UI Framework (`SAMPMobileCefUI.inc`)**:
   - 🔔 Toast Notifications (`CefShowNotification`)
   - 💬 Message & Input Modals (`CefShowDialog`, `CefShowInputDialog`)
   - 📋 Interactive List & Table Dialogs (`CefShowListDialog`)
   - 🎵 HTML5 Audio & Sound Player (`CefPlayAudio`, `CefStopAudio`)
   - 🎒 Inventory Grid Framework (`CefOpenInventory`)
-  - 🚗 Speedometer & Player HUD Controls
-  - ⏳ Action Progress Bars
 - **Classic Dialog Callbacks**: Native support for `OnCefDialogResponse`, `OnCefListDialogResponse`, and `OnCefInventoryUseItem`.
 - **Dynamic JavaScript Execution**: Execute custom JS strings on player devices with `CefExecuteJavaScript`.
 - **External Web & API Capabilities**: Full support for `fetch()`, REST APIs, OAuth2 authentication (e.g. Discord login), web fonts, and CSS animations.
@@ -69,7 +67,7 @@ graph TD
 This repository provides two server-side Pawn includes located in `server/`:
 
 1. **[SAMPMobileCef.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCef.inc)**: Core low-level include handling RakNet packet RPCs, rate-limiting, browser scaling, state tracking, and raw event transmission.
-2. **[SAMPMobileCefUI.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCefUI.inc)**: High-level UI component framework for Notifications, Web Dialogs, List Tables, Audio, Inventory, Speedometers, HUDs, and Progress Bars.
+2. **[SAMPMobileCefUI.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCefUI.inc)**: Lightweight, streamlined UI framework for Notifications, Web Dialogs, List Tables, Audio, and Inventory.
 
 ---
 
@@ -127,7 +125,7 @@ public OnPlayerConnect(playerid)
 
 ---
 
-## 🎨 High-Level UI Framework (SAMPMobileCefUI.inc)
+## 🎨 Streamlined UI Framework (SAMPMobileCefUI.inc)
 
 ### Notifications & Toasts
 ```pawn
@@ -188,12 +186,6 @@ public OnCefInventoryUseItem(playerid, slot_id, const item_name[])
     printf("Player %d used %s from slot %d", playerid, item_name, slot_id);
     return 1;
 }
-```
-
-### HUD & Speedometer
-```pawn
-CefUpdateSpeedometer(playerid, 120, 85, 950.0, true, true);
-CefUpdatePlayerHUD(playerid, 5000, 125000, 5, 12, "Los Santos");
 ```
 
 ---
