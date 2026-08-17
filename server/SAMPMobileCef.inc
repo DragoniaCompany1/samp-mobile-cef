@@ -2,7 +2,8 @@
 	EN: Server include of CEF library for SA:MP Mobile (Pro Edition).
 	UK: Серверний заголовний файл бібліотеки CEF для SA:MP Mobile.
 
-	Copyright © 2024 Denis Akazuki <https://github.com/denis-akazuki>
+	Original Concept & Base Library Copyright © 2024 Denis Akazuki <https://github.com/denis-akazuki>
+	Upgraded Framework & Enhancements Copyright © 2026 drgxbytezone & Community
 
 	EN: Out of respect, please do not delete this comment if you use code from this project.
 	UK: З поваги, будь ласка, не видаляйте цей коментар, якщо використовуєте код із цього проєкту.
@@ -24,7 +25,7 @@
 	#endif
 
 	#define CEF_PREFIX "[CEF] "
-	#define CEF_INC_VERSION "1.4.0-Upgraded"
+	#define CEF_INC_VERSION "1.5.0-Upgraded"
 
 	#if !defined CEF_MAX_EVENT_NAME_LENGTH
 		#define CEF_MAX_EVENT_NAME_LENGTH 48
@@ -55,9 +56,9 @@
 		RPC_ChangeBrowserFocus,
 		RPC_ServerEvent,
 
-		RPC_LibraryInit,
-		RPC_BrowserInit,
-		RPC_ClientEvent,
+		RPC_LibraryInit = 8,
+		RPC_BrowserInit = 9,
+		RPC_ClientEvent = 10
 	};
 
 	stock IsPacketIdSet()
@@ -224,6 +225,14 @@
 		cef_browser_zoom[playerid] = 1.0;
 	}
 
+	stock CefClearBrowserCache(playerid)
+	{
+		if (!CefIsPlayerHasLibrary(playerid))
+			return;
+
+		CefExecuteJavaScript(playerid, "localStorage.clear(); sessionStorage.clear(); location.reload();");
+	}
+
 	stock CefSetBrowserZoom(playerid, Float:scale)
 	{
 		if (playerid < 0 || playerid >= MAX_PLAYERS)
@@ -285,6 +294,11 @@
 		BS_Delete(bs);
 	}
 
+	stock CefSetBrowserFocus(playerid, bool:is_focused)
+	{
+		CefChangeBrowserFocus(playerid, is_focused);
+	}
+
 	stock CefSetBrowserFocusAll(bool:is_focused)
 	{
 		if (!IsPacketIdSet())
@@ -328,6 +342,26 @@
 		PR_SendPacket(bs, playerid, PR_HIGH_PRIORITY, PR_RELIABLE);
 		
 		BS_Delete(bs);
+	}
+
+	stock CefEmit(playerid, const event_name[], const format_str[], {Float,_}:...)
+	{
+		if (!IsPacketIdSet() || !CefIsPlayerHasLibrary(playerid))
+			return;
+
+		new formatted_data[CEF_MAX_EVENT_DATA_LENGTH];
+		format(formatted_data, sizeof(formatted_data), format_str);
+		CefSendEvent(playerid, event_name, formatted_data);
+	}
+
+	stock CefEmitToAll(const event_name[], const format_str[], {Float,_}:...)
+	{
+		if (!IsPacketIdSet())
+			return;
+
+		new formatted_data[CEF_MAX_EVENT_DATA_LENGTH];
+		format(formatted_data, sizeof(formatted_data), format_str);
+		CefSendEventToAll(event_name, formatted_data);
 	}
 
 	stock CefExecuteJavaScript(playerid, const code[])
@@ -434,6 +468,14 @@
 			return false;
 		
 		return bool:cef_initialized_players[playerid];
+	}
+
+	stock bool:CefIsClientConnected(playerid)
+	{
+		if (playerid < 0 || playerid >= MAX_PLAYERS)
+			return false;
+
+		return (IsPlayerConnected(playerid) && bool:cef_initialized_players[playerid]);
 	}
 
 	public OnIncomingPacket(playerid, packetid, BitStream:bs)

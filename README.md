@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.4.1--Clean-indigo.svg?style=for-the-badge&logo=github" alt="Version"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-1.5.0--Upgraded-indigo.svg?style=for-the-badge&logo=github" alt="Version"></a>
   <a href="https://open.mp"><img src="https://img.shields.io/badge/open.mp-compatible-blue.svg?style=for-the-badge&logo=cplusplus" alt="open.mp"></a>
   <a href="https://sa-mp.mp"><img src="https://img.shields.io/badge/SA--MP-0.3.7-orange.svg?style=for-the-badge" alt="SA:MP"></a>
   <a href="https://github.com/4x11/build69"><img src="https://img.shields.io/badge/Platform-Android%20Mobile-green.svg?style=for-the-badge&logo=android" alt="Android"></a>
@@ -14,12 +14,19 @@
 
 ---
 
+## 👥 Credits & Authors
+
+- **Original Concept & Creator**: **[Denis Akazuki](https://github.com/denis-akazuki)** (Original SA:MP Mobile CEF concept & base library)
+- **Upgraded Framework & Open-Source Client Implementation**: **[drgxbytezone & Community](https://github.com/drgxbytezone)** (Complete C++ NDK & Java open-source client files, `SAMPMobileCefUI.inc`, rate limiting, screen scaling, `CefEmit`, Confirm Dialogs, Context Menus)
+
+---
+
 ## 📌 Overview
 
-**SA:MP Mobile CEF** is a state-of-the-art bridge library designed for **GTA San Andreas Multiplayer (SA:MP) Mobile Android clients**. It embeds an Android **WebView (Chromium)** seamlessly into the game overlay, empowering server developers to build modern, fluid, and responsive user interfaces using standard web technologies (**HTML5, CSS3, JavaScript, React, Vue, Tailwind CSS**).
+**SA:MP Mobile CEF** is a state-of-the-art, open-source bridge ecosystem designed for **GTA San Andreas Multiplayer (SA:MP) Mobile Android clients**. It embeds an Android **WebView (Chromium)** seamlessly into the game overlay, empowering server developers to build modern, fluid, and responsive user interfaces using standard web technologies (**HTML5, CSS3, JavaScript, React, Vue, Tailwind CSS**).
 
 > **Bahasa Indonesia:**  
-> SA:MP Mobile CEF adalah library jembatan yang memasukkan **WebView (Chromium)** ke dalam aplikasi GTA SA:MP Android. Dengan ini, developer server dapat membuat tampilan UI (Login, UCP, Inventory, Shop, Dialog, Notifikasi) menggunakan HTML5, CSS3, dan JavaScript di layar HP pemain.
+> SA:MP Mobile CEF adalah ekosistem library open-source yang memasukkan **WebView (Chromium)** ke dalam aplikasi GTA SA:MP Android. Dengan ini, developer server dapat membuat antarmuka UI (Login, UCP, Inventory, Shop, Dialog, Notifikasi) menggunakan HTML5, CSS3, dan JavaScript di layar HP pemain.
 
 ---
 
@@ -28,22 +35,28 @@
 | Feature / Capability | Old SA:MP TextDraws | 🚀 SA:MP Mobile CEF |
 |---|:---:|:---:|
 | **Design & Layout** | Fixed pixel boxes, basic fonts | Full HTML5, CSS3, Flexbox, Grid |
-| **Styling & Effects** | None / Static colors | Glassmorphism, Shadows, Blur, Animations |
+| **Styling & Effects** | Static colors | Glassmorphism, Shadows, Blur, Animations |
 | **Framework Support** | None | React, Vue, Svelte, Tailwind CSS |
 | **External APIs / OAuth2** | ❌ Impossible | ✅ Supported (`fetch`, Axios, Discord Login) |
 | **Audio Playback** | Standard SA:MP Audio Stream | Custom HTML5 Audio / SFX Player |
-| **Interactive Components** | Basic click box | Search bars, Dropdowns, Drag & Drop Inventory |
+| **Interactive Components** | Basic click box | Search bars, Dropdowns, Context Menus, Grids |
 | **Responsive Mobile UI** | Fixed resolution | Auto-scalable (`CefSetBrowserZoom`) |
+| **Client Source Code** | Closed / Proprietary | 100% Open-Source (`client/cpp/` & `client/java/`) |
 
 ---
 
 ## 📑 Table of Contents
+- [👥 Credits & Authors](#-credits--authors)
 - [✨ Key Features](#-key-features)
-- [🏗️ System Architecture & Event Flow](#️-system-architecture--event-flow)
-- [📦 Includes & Modules](#-includes--modules)
+- [🏗️ System Architecture](#️-system-architecture)
+- [📂 Open-Source Repository Modules](#-open-source-repository-modules)
 - [🚀 Quick Start Guide](#-quick-start-guide)
+  - [1. Server-Side Setup (Pawn)](#1-server-side-setup-pawn)
+  - [2. Client-Side Setup (C++ NDK & Java)](#2-client-side-setup-c-ndk--java)
 - [📖 Core Pawn API (`SAMPMobileCef.inc`)](#-core-pawn-api-sampmobilecefinc)
 - [🎨 Streamlined UI API (`SAMPMobileCefUI.inc`)](#-streamlined-ui-api-sampmobilecefuiinc)
+- [💻 Native C++ Client API](#-native-c-client-api)
+- [📱 Java Android Client API](#-java-android-client-api)
 - [🌐 JavaScript Web API Reference](#-javascript-web-api-reference)
 - [💡 Real-World Code Examples](#-real-world-code-examples)
 - [❓ Frequently Asked Questions (FAQ)](#-frequently-asked-questions-faq)
@@ -53,72 +66,64 @@
 
 ## ✨ Key Features
 
-- **Full WebView Lifecycle Control**: Initialize, show, hide, reload, toggle, zoom/scale, and update URL/focus from Pawn.
-- **Server Event Anti-Spam Guard**: Built-in rate limiter protecting the server from JavaScript event spam (`CefSetEventRateLimit`).
+- **100% Open-Source Client & Server Code**: Includes complete inspectable C++ NDK and Java Android Studio source files inside `client/`.
+- **Formatted Data Transmission (`CefEmit` / `CefEmitToAll`)**: Send formatted events directly from Pawn using `format` syntax without JSON boilerplate.
+- **Full WebView Lifecycle Control**: Initialize, show, hide, reload, clear cache, toggle, scale/zoom, and change URL/focus directly from Pawn.
+- **Anti-Spam Event Rate Limiter**: Server-side protection against JavaScript event flooding (`CefSetEventRateLimit`).
 - **Streamlined High-Level UI Framework (`SAMPMobileCefUI.inc`)**:
-  - 🔔 **Notifications & Toasts**: Instant pop-up alerts with custom types (`info`, `success`, `warning`, `error`).
-  - 💬 **Web Dialog & Input Modals**: Native replacement for SA:MP dialogs (`CefShowDialog`, `CefShowInputDialog`).
-  - 📋 **List & Table Dialogs**: Interactive tables with search bars (`CefShowListDialog`).
+  - 🔔 **Toast Notifications**: Instant pop-up alerts (`CefShowNotification`, `CefShowNotificationToAll`).
+  - 💬 **Web Dialog & Input Modals**: Native replacement for SA:MP dialogs (`CefShowDialog`, `CefShowInputDialog`, `CefShowConfirmDialog`).
+  - 📋 **List & Context Menus**: Interactive tables with search bars (`CefShowListDialog`, `CefShowContextMenu`).
   - 🎵 **HTML5 Audio Player**: Trigger background music or UI sound effects from web URLs (`CefPlayAudio`).
   - 🎒 **Inventory Grid Framework**: Complete grid-based inventory open/close handlers (`CefOpenInventory`).
-- **Classic Dialog Callbacks**: Native gamemode hooks for `OnCefDialogResponse`, `OnCefListDialogResponse`, and `OnCefInventoryUseItem`.
+- **Classic Dialog Callbacks**: Native gamemode hooks for `OnCefDialogResponse`, `OnCefListDialogResponse`, `OnCefConfirmDialogResponse`, `OnCefContextMenuResponse`, and `OnCefInventoryUseItem`.
 - **Dynamic JavaScript Execution**: Run custom JS strings on player devices dynamically with `CefExecuteJavaScript`.
-- **Bi-Directional Communication**: Event-driven architecture between Pawn and JavaScript (`CefSendEvent` ↔ `Cef.registerEventCallback`).
 
 ---
 
-## 🏗️ System Architecture & Event Flow
+## 🏗️ System Architecture
 
-### System Architecture Diagram
 ```mermaid
 graph TD
     subgraph "SA:MP Server (Pawn & Plugins)"
-        Gamemode[Gamemode / Pawn Script] -->|SAMPMobileCefUI.inc| CoreInclude[SAMPMobileCef.inc Core]
-        CoreInclude -->|BitStream RPC| PawnRakNet[Pawn.RakNet Plugin]
+        A[Gamemode / Pawn Script] -->|SAMPMobileCefUI.inc| B[SAMPMobileCef.inc Core]
+        B -->|RPC Packets| C[Pawn.RakNet Plugin]
     end
 
     subgraph "Network Connection"
-        PawnRakNet <-->|RakNet BitStream Custom Packet #252| RakClient[Android RakClient]
+        C <-->|RakNet BitStream Custom Packet #252| D[RakClient Android]
     end
 
-    subgraph "Android Client Application (C++ / Java)"
-        RakClient <-->|libSAMPMobileCef.a / NDK| JavaManager[CefJavaManager / AAR]
-        JavaManager <-->|Android WebView Overlay| WebUI[Web UI: HTML / CSS / JS]
+    subgraph "Android Client Application (Open Source)"
+        D <-->|client/cpp/SAMPMobileCef.cpp| E[client/java/CefJavaManager.java]
+        E <-->|Android WebView Overlay| F[Web UI: HTML / CSS / JS]
     end
-```
-
-### Event Interaction Sequence
-```mermaid
-sequenceDiagram
-    autonumber
-    participant Player as Player (Android Phone)
-    participant WebUI as Web Interface (JS)
-    participant Client as SA:MP Mobile Client
-    participant Server as SA:MP Server (Pawn)
-
-    Player->>WebUI: Click "Register UCP" Button
-    WebUI->>Client: Cef.sendEvent("register_submit", dataJson)
-    Client->>Server: RakNet Custom Packet (ID_CUSTOM_CEF)
-    Server->>Server: Trigger Pawn Callback (OnRegisterSubmit)
-    Server->>Client: CefSendEvent(playerid, "register_response", resultJson)
-    Client->>WebUI: Cef.registerEventCallback fires "register_response"
-    WebUI->>Player: DOM updates to display UCP PIN & Success Screen
 ```
 
 ---
 
-## 📦 Includes & Modules
+## 📂 Open-Source Repository Modules
 
-This repository provides two server-side Pawn includes located in `server/`:
+This repository provides full, inspectable source code for both client and server:
 
-1. **[SAMPMobileCef.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCef.inc)**: Core low-level include handling RakNet packet RPCs, anti-spam rate limiting, screen scaling, state tracking, and raw event transmission.
-2. **[SAMPMobileCefUI.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCefUI.inc)**: Streamlined, lightweight UI framework for Notifications, Web Dialogs, Searchable Lists, HTML5 Audio, and Inventory Grids.
+### 1. Server-Side Includes (`server/`)
+- **[SAMPMobileCef.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCef.inc)**: Core low-level include handling RakNet packet RPCs, rate-limiting, browser scaling, state tracking, `CefEmit`, and raw event transmission.
+- **[SAMPMobileCefUI.inc](file:///home/drgxel/Documents/samp/samp-mobile-cef/server/SAMPMobileCefUI.inc)**: Streamlined UI framework for Notifications, Modals, Searchable Lists, Confirm Dialogs, Context Menus, Audio, and Inventory.
+
+### 2. Client-Side Source Files (`client/`)
+- **C++ NDK Layer**:
+  - [client/cpp/SAMPMobileCef.h](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/cpp/SAMPMobileCef.h) (Header)
+  - [client/cpp/SAMPMobileCef.cpp](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/cpp/SAMPMobileCef.cpp) (Source Implementation)
+- **Java Android Layer**:
+  - [client/java/CefJavaManager.java](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/java/CefJavaManager.java) (WebView Overlay Manager)
+  - [client/java/CefClientManager.java](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/java/CefClientManager.java) (JNI Bridge Manager)
 
 ---
 
 ## 🚀 Quick Start Guide
 
-### 1. Include Libraries in Gamemode
+### 1. Server-Side Setup (Pawn)
+
 ```pawn
 #include <open.mp> // or #include <a_samp>
 #include <Pawn.RakNet>
@@ -132,7 +137,6 @@ This repository provides two server-side Pawn includes located in `server/`:
 
 public OnGameModeInit()
 {
-    // Set network packet ID & rate limit
     CefSetPacketId(CEF_PACKET_ID);
     CefSetEventRateLimit(20); // 20 events/sec per player
     return 1;
@@ -140,23 +144,8 @@ public OnGameModeInit()
 
 public OnPlayerConnect(playerid)
 {
-    // Initialize Web UI for player
     CefInitBrowser(playerid, "file:///android_asset/cef/index.html");
     return 1;
-}
-```
-
-### 2. Connect JavaScript Frontend
-```javascript
-// Register callback to listen for server events
-Cef.registerEventCallback("welcome_message", function(eventDataJson) {
-    const data = JSON.parse(eventDataJson);
-    console.log("Welcome Message from Server:", data[0]);
-});
-
-// Send an event back to Pawn server
-function triggerAction(actionName) {
-    Cef.sendEvent("player_action", JSON.stringify([actionName]));
 }
 ```
 
@@ -164,12 +153,12 @@ function triggerAction(actionName) {
 
 ## 📖 Core Pawn API (`SAMPMobileCef.inc`)
 
-### Browser Lifecycle & Management
-
 | Function | Signature | Description |
 |---|---|---|
 | `CefSetPacketId` | `CefSetPacketId(packet_id)` | Configures network packet ID for CEF communication. |
 | `CefSetEventRateLimit` | `CefSetEventRateLimit(max_events_per_sec)` | Configures server-side anti-spam rate limiter. |
+| `CefEmit` | `CefEmit(playerid, event_name[], format_str[], ...)` | Sends formatted JSON event directly using format syntax. |
+| `CefEmitToAll` | `CefEmitToAll(event_name[], format_str[], ...)` | Broadcasts formatted JSON event to all online players. |
 | `CefInitBrowser` | `CefInitBrowser(playerid, const url[])` | Initializes player WebView with specified URL. |
 | `CefDestroyBrowser` | `CefDestroyBrowser(playerid)` | Destroys player WebView instance. |
 | `CefShowBrowser` | `CefShowBrowser(playerid)` | Shows player WebView overlay. |
@@ -178,24 +167,15 @@ function triggerAction(actionName) {
 | `CefIsBrowserShown` | `bool:CefIsBrowserShown(playerid)` | Returns `true` if browser is currently shown. |
 | `CefSetBrowserZoom` | `CefSetBrowserZoom(playerid, Float:scale)` | Scales Web UI zoom factor (e.g. 1.25 for 1080p/2K). |
 | `CefGetBrowserZoom` | `Float:CefGetBrowserZoom(playerid)` | Retrieves player's current zoom scale factor. |
+| `CefClearBrowserCache` | `CefClearBrowserCache(playerid)` | Remotely clears localStorage, sessionStorage, and reloads. |
 | `CefSetBrowserUrl` | `CefSetBrowserUrl(playerid, const url[])` | Changes active URL for player WebView. |
 | `CefGetBrowserUrl` | `CefGetBrowserUrl(playerid, dest[], maxlen)` | Retrieves current active URL. |
 | `CefReloadBrowser` | `CefReloadBrowser(playerid)` | Reloads current active URL. |
 | `CefResetBrowser` | `CefResetBrowser(playerid)` | Complete reset of player WebView state. |
-
-### Event Communication & Execution
-
-| Function | Signature | Description |
-|---|---|---|
 | `CefSendEvent` | `CefSendEvent(playerid, event_name[], event_data[])` | Sends JSON event to player WebView. |
-| `CefSendEventToAll` | `CefSendEventToAll(event_name[], event_data[])` | Broadcasts JSON event to all online players. |
+| `CefSendEventToAll` | `CefSendEventToAll(event_name[], event_data[])` | Broadcasts JSON event to all players. |
 | `CefExecuteJavaScript` | `CefExecuteJavaScript(playerid, const code[])` | Executes custom JavaScript code string in player WebView. |
 | `CefExecuteJavaScriptToAll` | `CefExecuteJavaScriptToAll(const code[])` | Broadcasts custom JavaScript code to all players. |
-| `CefRegisterEventCallback` | `CefRegisterEventCallback(event_name[], callback[])` | Registers Pawn callback for client event. |
-| `CefUnregisterEventCallback` | `bool:CefUnregisterEventCallback(event_name[])` | Removes registered callback. |
-| `CefHasEventCallback` | `bool:CefHasEventCallback(event_name[])` | Checks if callback is currently registered. |
-| `CefIsPlayerHasLibrary` | `bool:CefIsPlayerHasLibrary(playerid)` | Checks if player client supports CEF. |
-| `CefGetInitializedPlayerCount` | `CefGetInitializedPlayerCount()` | Returns total online players with CEF initialized. |
 
 ---
 
@@ -203,70 +183,67 @@ function triggerAction(actionName) {
 
 ### 1. Notifications & Toasts
 ```pawn
-// Show toast notification to player
-CefShowNotification(playerid, "Transaksi Berhasil", "Uang $5,000 telah ditambahkan", "success", 3000);
-
-// Broadcast notification to all players
-CefShowNotificationToAll("Server Event", "Double EXP event telah dimulai!", "info", 5000);
+CefShowNotification(playerid, "Success", "Item purchased successfully!", "success", 3000);
+CefShowNotificationToAll("Server Event", "Double EXP event is now active!", "info", 5000);
 ```
 
-### 2. Web Dialogs & Modals (SA:MP Dialog Style)
+### 2. Web Dialogs, Modals, & Context Menus
 ```pawn
-// Message Box Dialog
-CefShowDialog(playerid, DIALOG_RULES, "Peraturan Server", "Dilarang menggunakan cheat/mod ilegal!", "Setuju", "Tutup");
+// MessageBox & Input Modals
+CefShowDialog(playerid, DIALOG_RULES, "Rules", "Welcome to the server!", "Agree", "Close");
+CefShowInputDialog(playerid, DIALOG_LOGIN, "Login", "Enter password:", "Login", "Cancel", true);
 
-// Input Dialog
-CefShowInputDialog(playerid, DIALOG_LOGIN, "Login Akun", "Masukkan password akun UCP Anda:", "Login", "Batal", true);
+// Confirm Dialog (Yes / No)
+CefShowConfirmDialog(playerid, DIALOG_BUY, "Purchase", "Do you want to buy Infernus for $1,500,000?", "Yes", "No");
 
 // Searchable List / Table Dialog
 new garage_items[] = "[\"Infernus - $1,500,000\", \"Turismo - $1,200,000\", \"Bullet - $1,100,000\"]";
-CefShowListDialog(playerid, DIALOG_GARAGE, "Garasi Kendaraan", garage_items, "Pilih", "Batal");
+CefShowListDialog(playerid, DIALOG_GARAGE, "Garage", garage_items, "Buy", "Cancel");
 
-// Automatic Callback Hooks in Gamemode
-public OnCefDialogResponse(playerid, dialogid, response, const inputtext[])
-{
-    if (dialogid == DIALOG_LOGIN && response)
-    {
-        printf("Player %d entered password: %s", playerid, inputtext);
-    }
-    return 1;
-}
+// Interactive Context Menu
+new options[] = "[\"Inspect Player\", \"Trade\", \"Invite to Faction\"]";
+CefShowContextMenu(playerid, MENU_PLAYER, "Player Actions", options);
 
-public OnCefListDialogResponse(playerid, dialogid, response, item_index, const item_value[])
-{
-    if (dialogid == DIALOG_GARAGE && response)
-    {
-        printf("Player %d selected vehicle #%d: %s", playerid, item_index, item_value);
-    }
-    return 1;
-}
+// Callbacks
+public OnCefDialogResponse(playerid, dialogid, response, const inputtext[]) { ... }
+public OnCefConfirmDialogResponse(playerid, dialogid, response) { ... }
+public OnCefContextMenuResponse(playerid, menu_id, item_index, const item_value[]) { ... }
 ```
 
 ### 3. HTML5 Audio & SFX Player
 ```pawn
-// Play Sound Effect / Background Audio from Web URL
 CefPlayAudio(playerid, "https://example.com/sfx/welcome.mp3", false, 0.8);
-
-// Stop Audio Playback
 CefStopAudio(playerid);
-
-// Adjust Volume (0.0 to 1.0)
-CefSetAudioVolume(playerid, 0.5);
 ```
 
-### 4. Inventory Grid Framework
-```pawn
-// Open Inventory Grid
-new items[] = "[{\"id\":1, \"name\":\"Medkit\", \"count\":3}, {\"id\":2, \"name\":\"Repair Kit\", \"count\":1}]";
-CefOpenInventory(playerid, items);
+---
 
-// Item Use Callback
-public OnCefInventoryUseItem(playerid, slot_id, const item_name[])
-{
-    printf("Player %d used %s from slot %d", playerid, item_name, slot_id);
-    return 1;
-}
-```
+## 💻 Native C++ Client API
+
+Located in [client/cpp/SAMPMobileCef.h](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/cpp/SAMPMobileCef.h):
+
+| Function | Description |
+|---|---|
+| `cef::setGamePath(const char* szPath)` | Configures client game storage path for logging (`SAMP/cef.log`). |
+| `cef::initNetwork(void* pRakClient, uint8_t packetId)` | Binds RakClient pointer and custom packet ID (e.g. 252). |
+| `cef::sendClientEvent(const char* name, const char* data)` | Serializes and sends client JavaScript event to SA:MP Server. |
+| `cef::handlePacket(void* pPacket)` | Parses incoming RakNet BitStream packets from SA:MP Server. |
+| `cef::handleServerConnection()` | Sends initial `RPC_LibraryInit` packet to SA:MP Server. |
+| `cef::log(const char* fmt, ...)` | Writes formatted debug log entries to `SAMP/cef.log`. |
+
+---
+
+## 📱 Java Android Client API
+
+Located in [client/java/CefJavaManager.java](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/java/CefJavaManager.java):
+
+| Function | Description |
+|---|---|
+| `CefJavaManager(FrameLayout rootLayout, Activity activity)` | Constructor initializing hardware-accelerated WebView overlay. |
+| `loadUrl(String url)` | Loads web interface URL into WebView. |
+| `showBrowserView()` / `hideBrowserView()` | Toggles WebView visibility overlay with smooth fade animation. |
+| `isShow()` | Returns `true` if WebView is currently visible. |
+| `sendEvent(String eventName, String eventDataJson)` | `@JavascriptInterface` bridge (`window.AndroidCefBridge`). |
 
 ---
 
@@ -318,5 +295,6 @@ Tidak. Android WebView menggunakan perakitan GPU bawaan Android (Hardware Accele
 
 See detailed release notes and version history in [CHANGELOG.md](CHANGELOG.md).
 
-**Copyright © 2024-2026 [Denis Akazuki & Community](https://github.com/denis-akazuki)**  
+**Original Copyright © 2024 [Denis Akazuki](https://github.com/denis-akazuki)**  
+**Upgraded Framework & Client Code Copyright © 2026 [drgxbytezone & Community](https://github.com/drgxbytezone)**  
 Licensed under the **MIT License**.

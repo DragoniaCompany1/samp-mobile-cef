@@ -1,92 +1,90 @@
-Мова: [English](../en/client.md) | **Українська**
+Language: [English](../en/client.md) | **Українська**
 
-# SA:MP Mobile CEF
+# SA:MP Mobile CEF — Інструкція з інтеграції клієнтської частини
 
-## Важлива інформація
-- Усі логи клієнтської частини, включаючи логи WebView, зберігаються в папці `SAMP/cef.log`.
-- Додаткові функції для роботи з клієнтською частиною відсутні; всі необхідні функції зазначені в наведених нижче інструкціях з установки.
-
-## Установка і налаштування клієнтської частини (C++)
-
-> [!WARNING]
-> Наведені нижче приклади підходять для більшості проєктів, але можливі винятки.
-
-- Експортуйте файли `client/cpp/libSAMPMobileCef.a` та `client/cpp/SAMPMobileCef.h` в папку `vendor/cef` вашого клієнта (папку необхідно створити вручну).
-- У файлі `Android.mk` підключіть бібліотеку `libSAMPMobileCef.a`:
-    ```makefile
-    include $(PREBUILT_STATIC_LIBRARY)
-    include $(CLEAR_VARS)
-    LOCAL_MODULE    := libSAMPMobileCef 
-    LOCAL_SRC_FILES := vendor/cef/libSAMPMobileCef.a
-
-    LOCAL_STATIC_LIBRARIES := libSAMPMobileCef
-    ```
-- У файлі `main.cpp` підключіть заголовковий файл `SAMPMobileCef.h`:
-    ```cpp
-    #include "vendor/cef/SAMPMobileCef.h"
-    ```
-- У файлі `main.cpp`, в функції `InitSAMP`, задайте адресу кешу гри:
-    ```cpp
-    cef::setGamePath(g_pszStorage);
-    ```
-- У файлі `net/netgame.cpp` підключіть заголовковий файл `SAMPMobileCef.h` таким же способом, як і в файлі `main.cpp`.
-- У файлі `net/netgame.cpp`, в конструкторі `CNetGame`, ініціалізуйте мережеву частину бібліотеки:
-    ```cpp
-    cef::initNetwork(m_pRakClient, ID_CUSTOM_CEF); // слід передати вказівник на RakClient і кастомний ID пакету для мережевого спілкування (наприклад, 252 або будь-який інший вільний у PacketEnumeration)
-    ```
-- У файлі `net/netgame.cpp`, в `CNetGame::UpdateNetwork`, додайте обробку раніше вказаного пакету:
-    ```cpp
-    switch (packetIdentifier)
-    {
-    ...
-    case ID_CUSTOM_CEF: // раніше вказаний ID в initNetwork
-        cef::handlePacket(pkt);
-        break;
-    }
-    ```
-- У файлі `net/netgame.cpp`, в `CNetGame::Packet_ConnectionSucceeded`, додайте обробку підключення до сервера:
-    ```cpp
-    cef::handleServerConnection(); // в кінець функції
-    ```
-
-## Установка і налаштування клієнтської частини (Java)
-
-> [!WARNING]
-> Наведені нижче приклади підходять для більшості проєктів, але можливі винятки.
-
-- Експортуйте файл `client/java/sampmobilecef-...-release.aar` в `app/libs` (папку `libs` слід створити, якщо вона відсутня).
-- У файлі `app/build.gradle` імпортуйте раніше експортовану бібліотеку:
-    ```groovy
-    dependencies {
-        implementation files("libs/sampmobilecef-...-release.aar")
-    }
-    ```
-- У файлі `NvEventQueueActivity` ініціалізуйте такі змінні:
-    ```java
-    private CefJavaManager mJavaManager = null;
-    private CefClientManager mClientManager = null;
-    ```
-- У файлі `NvEventQueueActivity`, в функції `systemInit`, додайте ініціалізацію необхідних класів:
-    ```java
-    mJavaManager = new CefJavaManager(mRootFrame, getInstance());
-    mClientManager = new CefClientManager(getInstance());
-
-    mJavaManager.setClientManager(mClientManager);
-    mClientManager.setJavaManager(mJavaManager);
-    ```
-- У файлі `NvEventQueueActivity`, в функції `setPauseState`, додайте функціонал для приховання/показу WebView під час зміни стану паузи:
-    ```java
-    public void setPauseState(boolean z2) {
-        runOnUiThread(() -> {
-            if (mJavaManager.isShow()) {
-                if (z2)
-                    mJavaManager.hideBrowserView();
-                else
-                    mJavaManager.showBrowserView();
-            }
-        });
-    }
-    ```
+Цей посібник пояснює, як інтегрувати відкритий вихідний код **SA:MP Mobile CEF Client Engine** в Android застосунок SA:MP (Android NDK C++ та Android Studio Java).
 
 ---
-**Copyright © 2024 [Denis Akazuki](https://github.com/denis-akazuki).**
+
+## 📌 Важлива інформація
+- Усі клієнтські логи, включаючи повідомлення консолі WebView, автоматично зберігаються у файл `SAMP/cef.log` в директорії гри.
+- Клієнтський рушій використовує оверлей Android **WebView (Chromium)** з апаратним прискоренням GPU через міст JNI.
+
+---
+
+## 🛠️ Інсталяція та налаштування (C++ NDK Layer)
+
+Скопіюйте C++ файли з `client/cpp/` у директорію вашого проєкту `vendor/cef/`:
+- [SAMPMobileCef.h](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/cpp/SAMPMobileCef.h)
+- [SAMPMobileCef.cpp](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/cpp/SAMPMobileCef.cpp)
+
+1. У файлі `Android.mk`:
+   ```makefile
+   LOCAL_SRC_FILES += vendor/cef/SAMPMobileCef.cpp
+   ```
+
+2. У файлі `main.cpp`:
+   ```cpp
+   #include "vendor/cef/SAMPMobileCef.h"
+
+   // У функції InitSAMP():
+   cef::setGamePath(g_pszStorage);
+   ```
+
+3. У файлі `net/netgame.cpp`:
+   ```cpp
+   #include "vendor/cef/SAMPMobileCef.h"
+
+   // У конструкторі CNetGame:
+   cef::initNetwork(m_pRakClient, ID_CUSTOM_CEF); // Default packet ID 252
+
+   // У CNetGame::UpdateNetwork:
+   switch (packetIdentifier)
+   {
+       case ID_CUSTOM_CEF:
+           cef::handlePacket(pkt);
+           break;
+   }
+
+   // У CNetGame::Packet_ConnectionSucceeded:
+   cef::handleServerConnection();
+   ```
+
+---
+
+## 📱 Інсталяція та налаштування (Java Android Studio Layer)
+
+Скопіюйте Java файли з `client/java/` у пакет `com.samp.cef`:
+- [CefJavaManager.java](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/java/CefJavaManager.java)
+- [CefClientManager.java](file:///home/drgxel/Documents/samp/samp-mobile-cef/client/java/CefClientManager.java)
+
+1. У файлі `NvEventQueueActivity.java`:
+   ```java
+   private CefJavaManager mJavaManager = null;
+   private CefClientManager mClientManager = null;
+
+   // У функції systemInit():
+   mJavaManager = new CefJavaManager(mRootFrame, getInstance());
+   mClientManager = new CefClientManager(getInstance());
+
+   mJavaManager.setClientManager(mClientManager);
+   mClientManager.setJavaManager(mJavaManager);
+
+   // У функції setPauseState(boolean isPaused):
+   public void setPauseState(boolean isPaused) {
+       runOnUiThread(() -> {
+           if (mJavaManager.isShow()) {
+               if (isPaused)
+                   mJavaManager.hideBrowserView();
+               else
+                   mJavaManager.showBrowserView();
+           }
+       });
+   }
+   ```
+
+---
+
+**Original Copyright © 2024 [Denis Akazuki](https://github.com/denis-akazuki)**  
+**Upgraded Framework & Client Code Copyright © 2026 [drgxbytezone & Community](https://github.com/drgxbytezone)**  
+Licensed under the **MIT License**.
